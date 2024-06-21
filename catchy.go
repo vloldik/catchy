@@ -16,22 +16,22 @@ type Catchy[T interface{}] struct {
 	last     *DoableNode
 }
 
-func (c *Catchy[T]) WithOnSuccess(useValue func(T)) *Catchy[T] {
+func (c Catchy[T]) WithOnSuccess(useValue func(T)) Catchy[T] {
 	c.OnSucess = useValue
 	return c
 }
 
-func (c *Catchy[T]) WithOnError(onError func(error)) *Catchy[T] {
+func (c Catchy[T]) WithOnError(onError func(error)) Catchy[T] {
 	c.OnError = onError
 	return c
 }
 
-func (c *Catchy[T]) WithGetValueFunc(getValue func() (T, error)) *Catchy[T] {
+func (c Catchy[T]) WithGetValueFunc(getValue func() (T, error)) Catchy[T] {
 	c.GetValue = getValue
 	return c
 }
 
-func (c *Catchy[T]) doSelf() error {
+func (c Catchy[T]) doSelf() error {
 	value, err := c.GetValue()
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func (c *Catchy[T]) doSelf() error {
 	return nil
 }
 
-func (c *Catchy[T]) Do() error {
+func (c Catchy[T]) Do() error {
 	err := c.doSelf()
 	if err != nil && c.OnError != nil {
 		c.OnError(err)
@@ -59,7 +59,7 @@ func (c *Catchy[T]) Do() error {
 	return err
 }
 
-func (c *Catchy[T]) DoNext(next IDoable) *Catchy[T] {
+func (c Catchy[T]) DoNext(next IDoable) Catchy[T] {
 	node := newDoableNode(next)
 	if c.next == nil {
 		c.next = node

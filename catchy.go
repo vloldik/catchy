@@ -58,13 +58,13 @@ func (c Catchy[T]) Do() error {
 }
 
 func (c *Catchy[T]) DoNext(next IDoable) *Catchy[T] {
-	Node := newDoableNode(next)
+	node := newDoableNode(next)
 	if c.next == nil {
-		c.next = Node
-		c.last = Node
+		c.next = node
+		c.last = node
 	} else {
-		c.last.Next = Node
-		c.last = Node
+		c.last.Next = node
+		c.last = node
 	}
 	return c
 }

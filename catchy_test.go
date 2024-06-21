@@ -75,7 +75,8 @@ func TestExample(t *testing.T) {
 		assert(t, i == 42)
 		count += 1
 	}).WithOnError(func(err error) {
-		t.Fatalf("Should never happen")
+		assert(t, err.Error() == "Error happened")
+		count += 1
 	}).DoNext(catchy.WithGetValueFunc(func() (a string, err error) {
 		return "42", nil
 	}).WithOnSuccess(func(s string) {
@@ -92,5 +93,5 @@ func TestExample(t *testing.T) {
 		t.FailNow()
 		return nil
 	})).Do()
-	assert(t, count == 3)
+	assert(t, count == 4)
 }

@@ -1,89 +1,121 @@
-# catchy
+Catchy is a generic Go language structure that provides convenient ways to process values ​​using processing chains. It includes handling of success and error functions, as well as the ability to build a chain of actions.
+## TODO: 
 
-The catchy package provides a convenient way to handle errors and success cases in Go programming language.
+Add the ability to pass an argument along a chain
 
-## Usage
+#### Note - If an error occurs in a function chain, the chain is interrupted and if the `OnError` function is specified, `OnError` is called.
 
-The package includes the following functions and types:
+## Constructor functions
+`func WithGetValueFunc[T interface{}](getValue func() (T, error)) Catchy[T] `
 
-### Must[T interface{}](o T, err error) T
+It is used to create `Catchy` at once with a function to get a value and an error
 
-The Must function takes a value o and an error err. If err is not nil, it panics with the given error. Otherwise, it returns the value o.
+`func WithNoReturnFunc(noReturnFunc func() error) Catchy[Never]`
 
-### MustNoReturn(err error)
+Used to create `Catchy` at once with the function of getting only the error
 
-The MustNoReturn function is a helper function that calls Must with a Never value and the given error. It is useful when you have a function that doesn't return any value.
+## Example usage
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+
+	"github.com/vloldik/catchy"
+)
+
+func main() {
+	var result string
+
+	catchy.WithGetValueFunc(func() (string, error) {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter text: ")
+		return reader.ReadString('\n')
+	}).WithOnSuccess(func(input string) {
+		result = input
+	}).DoNext(catchy.WithGetValueFunc(func() (int, error) {
+		return strconv.Atoi(result[:len(result)-2])
+	}).WithOnSuccess(func(i int) {
+		fmt.Printf("You entered valid int %d", i)
+	})).WithOnError(func(err error) {
+		fmt.Printf("Error %s", err)
+	}).Do()
+}
+```
+
+## Basic types and structures
 
 ### Never
 
-The Never type is an empty interface used as a placeholder for functions that don't return any value.
+` type Never = interface{} `
 
-### Catchy[T interface{}]
+` var never = Never(nil) `
 
-The Catchy struct represents a catchy operation. It has three fields:
 
-- GetValue: A function that returns a value of type T and an error.
-- OnSuccess: A function that is called when the operation succeeds.
-- OnError: A function that is called when the operation encounters an error.
+Never is an interface that represents “nothing” and is used where there is no return value.
 
-### WithGetValueFunc[T interface{}](getValue func() (T, error)) Catchy[T]
-
-The WithGetValueFunc function creates a new Catchy instance with the given getValue function.
-
-### WithNoReturnFunc(noReturnFunc func() error) Catchy[Never]
-
-The WithNoReturnFunc function creates a new Catchy instance for functions that don't return any value.
-
-### WithOnSuccess(useValue func(T)) Catchy[T]
-
-The WithOnSuccess method sets the OnSuccess function for a Catchy instance.
-
-### WithOnError(onError func(error)) Catchy[T]
-
-The WithOnError method sets the OnError function for a Catchy instance.
-
-### Do()
-
-The Do method executes the catchy operation. It calls the GetValue function and handles the returned value and error based on the OnSuccess and OnError functions.
-
-## Example
-
-Here's an example usage of the catchy package:
+### IDoable
 
 ```go
-func main() {
-    catchy.WithGetValueFunc(func() (int, error) {
-        return 42, nil
-    }).WithOnSuccess(func(value int) {
-        fmt.Println("Success:", value)
-    }).WithOnError(func(err error) {
-        fmt.Println("Error:", err)
-    }).Do()
+type IDoable interface {
+    Do() error
 }
 ```
 
-In this example, we create a Catchy instance with a getValue function that returns the value 42 and no error. We set the OnSuccess function to print the success message and the OnError function to print the error message. Finally, we call the Do method to execute the catchy operation.
 
-Output:
-`Success: 42`
+IDoable is an interface that declares a Do() error method. This interface is used in processing chains.
 
-
-If the getValue function returns an error, the OnError function will be called instead:
-
+### Catchy
 ```go
-func main() {
-    catchy.WithGetValueFunc(func() (int, error) {
-        return 0, errors.New("something went wrong")
-    }).WithOnSuccess(func(value int) {
-        fmt.Println("Success:", value)
-    }).WithOnError(func(err error) {
-        fmt.Println("Error:", err)
-    }).Do()
+type Catchy[T interface{}] struct {
+    GetValue func() (T, error)
+    OnSucess func(T)
+    OnError func(error)
+    next *DoableNode
+    last *DoableNode
 }
 ```
 
-Output:
-`Error: something went wrong`
+
+Catchy is a generic structure with type T that includes functions for getting a value, handling success and errors, and nodes for constructing a chain.
+
+## Catchy Methods
+
+### WithOnSuccess
+
+`func (c Catchy[T]) WithOnSuccess(useValue func(T)) Catchy[T]`
 
 
-That's it! The catchy package helps you handle errors and success cases in a clean and concise way.
+The method sets the useValue function to handle the successful result. Returns the modified Catchy structure.
+
+### WithOnError
+
+`func (c Catchy[T]) WithOnError(onError func(error)) Catchy[T]`
+
+
+The method sets up the onError function to handle errors. Returns the modified Catchy structure.
+
+### WithGetValueFunc
+
+`func (c Catchy[T]) WithGetValueFunc(getValue func() (T, error)) Catchy[T]`
+
+
+The method sets up the getValue function to get the value. Returns the modified Catchy structure.
+
+### Do
+
+`func (c Catchy[T]) Do() error`
+
+
+The method executes the current Catchy structure and, if there is a next one in the chain, executes it. Returns an error if one occurs.
+
+### DoNext
+
+`func (c Catchy[T]) DoNext(next IDoable) Catchy[T]`
+
+
+The method adds the next IDoable node to the processing chain. Returns the modified Catchy structure.

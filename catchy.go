@@ -31,7 +31,7 @@ func (c *Catchy[T]) WithGetValueFunc(getValue func() (T, error)) *Catchy[T] {
 	return c
 }
 
-func (c Catchy[T]) doSelf() error {
+func (c *Catchy[T]) doSelf() error {
 	value, err := c.GetValue()
 	if err != nil && c.OnError != nil {
 		c.OnError(err)
@@ -45,7 +45,7 @@ func (c Catchy[T]) doSelf() error {
 	return nil
 }
 
-func (c Catchy[T]) Do() error {
+func (c *Catchy[T]) Do() error {
 	err := c.doSelf()
 	if err != nil {
 		return err

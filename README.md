@@ -6,11 +6,11 @@ Add the ability to pass an argument along a chain
 #### Note - If an error occurs in a function chain, the chain is interrupted and if the `OnError` function is specified, `OnError` is called.
 
 ## Constructor functions
-`func WithGetValueFunc[T interface{}](getValue func() (T, error)) *Catchy[T] `
+`func WithGetValueFunc[T interface{}](getValue func() (T, error)) Catchy[T] `
 
 It is used to create `Catchy` at once with a function to get a value and an error
 
-`func WithNoReturnFunc(noReturnFunc func() error) *Catchy[Never]`
+`func WithNoReturnFunc(noReturnFunc func() error) Catchy[Never]`
 
 Used to create `Catchy` at once with the function of getting only the error
 
@@ -87,21 +87,21 @@ Catchy is a generic structure with type T that includes functions for getting a 
 
 ### WithOnSuccess
 
-`func (c *Catchy[T]) WithOnSuccess(useValue func(T)) *Catchy[T]`
+`func (c Catchy[T]) WithOnSuccess(useValue func(T)) Catchy[T]`
 
 
 The method sets the useValue function to handle the successful result. Returns the modified Catchy structure.
 
 ### WithOnError
 
-`func (c *Catchy[T]) WithOnError(onError func(error)) *Catchy[T]`
+`func (c Catchy[T]) WithOnError(onError func(error)) Catchy[T]`
 
 
 The method sets up the onError function to handle errors. Returns the modified Catchy structure.
 
 ### WithGetValueFunc
 
-`func (c *Catchy[T]) WithGetValueFunc(getValue func() (T, error)) *Catchy[T]`
+`func (c Catchy[T]) WithGetValueFunc(getValue func() (T, error)) Catchy[T]`
 
 
 The method sets up the getValue function to get the value. Returns the modified Catchy structure.
@@ -115,7 +115,7 @@ The method executes the current Catchy structure and, if there is a next one in 
 
 ### DoNext
 
-`func (c *Catchy[T]) DoNext(next IDoable) *Catchy[T]`
+`func (c Catchy[T]) DoNext(next IDoable) Catchy[T]`
 
 
 The method adds the next IDoable node to the processing chain. Returns the modified Catchy structure.

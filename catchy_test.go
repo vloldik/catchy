@@ -7,6 +7,12 @@ import (
 	"github.com/vloldik/catchy"
 )
 
+func assert(t *testing.T, cond bool) {
+	if !cond {
+		t.FailNow()
+	}
+}
+
 func SomeFuncThatReturnsError() (a struct{}, b error) {
 	return a, errors.New("some error")
 }
@@ -59,4 +65,32 @@ func TestMust(t *testing.T) {
 	catchy.Must(SomeFuncThatReturnsValue())
 	RequirePanic(func() { catchy.MustNoReturn(SomeFuncThatReturnsOnlyError()) })
 	catchy.MustNoReturn(SomeFuncThatReturnsOnlyNil())
+}
+
+func TestExample(t *testing.T) {
+	count := 0
+	catchy.WithGetValueFunc(func() (int, error) {
+		return 42, nil
+	}).WithOnSuccess(func(i int) {
+		assert(t, i == 42)
+		count += 1
+	}).WithOnError(func(err error) {
+		t.Fatalf("Should never happen")
+	}).DoNext(catchy.WithGetValueFunc(func() (a string, err error) {
+		return "42", nil
+	}).WithOnSuccess(func(s string) {
+		assert(t, s == "42")
+		count += 1
+	}).WithOnError(func(err error) {
+		t.Fatalf("Should never happen")
+	})).DoNext(catchy.WithGetValueFunc(func() (a int, err error) {
+		return 0, errors.New("Error happened")
+	}).WithOnError(func(err error) {
+		assert(t, err.Error() == "Error happened")
+		count += 1
+	})).DoNext(catchy.WithNoReturnFunc(func() error {
+		t.FailNow()
+		return nil
+	})).Do()
+	assert(t, count == 3)
 }

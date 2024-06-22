@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/vloldik/catchy"
+	"github.com/vloldik/catchy/v2"
 )
 
 func assert(t *testing.T, cond bool) {
